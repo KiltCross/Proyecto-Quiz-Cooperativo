@@ -1,0 +1,522 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(ellipse at top, #1a1a6e 0%, #0d0d3b 60%, #0a0a28 100%);
+    padding: 24px 16px;
+    gap: 0;
+}
+
+
+/* ------------------------------------
+   index.php / login.php / registro.php
+------------------------------------ */
+
+/*
+   ENCABEZADO
+*/
+
+header.encabezado {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: linear-gradient(160deg, #1a1a6e 0%, #2a2a8e 50%, #1a1a6e 100%);
+    border-radius: 20px 20px 0 0;
+    padding: 32px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.encabezado__icono {
+    font-size: 48px;
+    filter: drop-shadow(0 0 8px rgba(150, 100, 255, 0.6));
+}
+
+.encabezado__titulo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.encabezado__quiz {
+    font-size: 36px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 2px;
+}
+
+.encabezado__coop {
+    font-size: 30px;
+    font-weight: 900;
+    color: #4ecca3;
+    letter-spacing: 1px;
+}
+
+.encabezado__subtitulo {
+    font-size: 14px;
+    color: #a0b4d6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+/*
+   MAIN
+*/
+
+main.contenido {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+}
+
+
+/*
+   SECCIÓN SALA
+*/
+
+.seccion-sala {
+    padding: 24px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.seccion-sala h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2d2d6e;
+    text-align: center;
+}
+
+.seccion-sala form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.seccion-sala form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.seccion-sala form input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #333333;
+    border: 2px solid #d0d5e8;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.seccion-sala form input:focus {
+    border-color: #6c5ce7;
+}
+
+.seccion-sala form input::placeholder {
+    color: #b0b8cc;
+}
+
+
+/*
+   SECCIÓN ADMIN
+*/
+
+.seccion-admin {
+    padding: 20px 24px 24px;
+    background: #f0eeff;
+    border-top: 1px solid #e0dcf8;
+    border-radius: 0 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.seccion-admin--nueva {
+    background: #e8faf4;
+    border-top: 1px solid #c3f0df;
+}
+
+.seccion-admin h2 {
+    font-size: 15px;
+    font-weight: 800;
+    color: #6c5ce7;
+}
+
+.seccion-admin--nueva h2 {
+    color: #00b894;
+}
+
+.seccion-admin p {
+    font-size: 13px;
+    color: #666666;
+}
+
+
+/*
+   MENSAJES
+*/
+
+.mensaje-error {
+    background: #fdecea;
+    border: 1px solid #f5c6c2;
+    color: #c0392b;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.mensaje-exito {
+    background: #e8faf4;
+    border: 1px solid #b7ebc8;
+    color: #00b894;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+
+/* ------------------------------------
+   BOTONES — uso global
+------------------------------------ */
+
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.boton:hover  { opacity: 0.9; }
+.boton:active { transform: scale(0.98); }
+
+.boton--primario {
+    background: #6c5ce7;
+    color: #ffffff;
+}
+
+.boton--contorno {
+    background: transparent;
+    color: #6c5ce7;
+    border: 2px solid #6c5ce7;
+}
+
+.boton--verde {
+    background: #00b894;
+    color: #ffffff;
+}
+
+.boton--rojo {
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+}
+
+.boton--rojo:hover {
+    opacity: 0.85;
+}
+
+.boton--chico {
+    padding: 6px 14px;
+    font-size: 12px;
+    width: auto;
+}
+
+
+/* ------------------------------------
+   dashboard.php
+------------------------------------ */
+
+body.pagina-dashboard {
+    display: block;
+    padding: 0;
+    background: radial-gradient(ellipse at top, #1a1a6e 0%, #0d0d3b 60%, #0a0a28 100%);
+    min-height: 100vh;
+}
+
+.barra-superior {
+    background: linear-gradient(160deg, #1a1a6e 0%, #2a2a8e 50%, #1a1a6e 100%);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.dashboard {
+    max-width: 900px;
+    margin: 32px auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.panel {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.panel h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #2d2d6e;
+}
+
+.texto-vacio {
+    font-size: 14px;
+    color: #999999;
+}
+
+
+/* ------------------------------------
+   conjuntos.php / conjunto_form.php
+------------------------------------ */
+
+/*
+   TABLA
+*/
+
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.tabla th {
+    text-align: left;
+    padding: 8px 12px;
+    background: #f0eeff;
+    color: #2d2d6e;
+    font-weight: 700;
+    border-bottom: 2px solid #e0dcf8;
+}
+
+.tabla td {
+    padding: 8px 12px;
+    color: #333333;
+    border-bottom: 1px solid #f0f0f8;
+}
+
+.tabla tbody tr:hover {
+    background: #fafaff;
+}
+
+.enlace-volver {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6c5ce7;
+    text-decoration: none;
+}
+
+.enlace-volver:hover {
+    text-decoration: underline;
+}
+
+
+/* ------------------------------------
+   conjunto_form.php / pregunta_form.php
+------------------------------------ */
+
+/*
+   INPUTS Y FORMULARIOS DEL PANEL
+*/
+
+.panel label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333333;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.panel input[type="text"],
+.panel input[type="number"],
+.panel input[type="email"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #333333;
+    border: 2px solid #d0d5e8;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fafafa;
+}
+
+.panel input:focus {
+    border-color: #6c5ce7;
+}
+
+.panel input::placeholder {
+    color: #b0b8cc;
+}
+
+.panel textarea {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #333333;
+    border: 2px solid #d0d5e8;
+    border-radius: 10px;
+    outline: none;
+    font-family: 'Segoe UI', sans-serif;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.panel textarea:focus {
+    border-color: #6c5ce7;
+}
+
+.panel textarea::placeholder {
+    color: #b0b8cc;
+}
+
+
+/* ------------------------------------
+   preguntas.php / pregunta_form.php
+------------------------------------ */
+
+/*
+   TARJETA PREGUNTA
+*/
+
+.tarjeta-pregunta {
+    border: 1px solid #e0dcf8;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #fafaff;
+}
+
+.tarjeta-pregunta__cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.tarjeta-pregunta__texto {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d2d6e;
+    flex: 1;
+}
+
+.tarjeta-pregunta__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #666666;
+    flex-shrink: 0;
+}
+
+.tarjeta-pregunta__opciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+
+/*
+   OPCIONES
+*/
+
+.opcion {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.opcion--correcta {
+    background: #e8faf4;
+    border: 1px solid #b7ebc8;
+    color: #00b894;
+}
+
+.opcion--incorrecta {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    color: #888888;
+}
+
+
+/*
+   FILA OPCION
+*/
+
+.fila-opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.fila-opcion input[type="radio"] {
+    width: auto;
+    cursor: pointer;
+    accent-color: #6c5ce7;
+}
+
+.fila-opcion input[type="text"] {
+    flex: 1;
+}
