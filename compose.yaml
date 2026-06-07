@@ -1,0 +1,24 @@
+services:
+
+  php:
+    build: .
+    ports: 
+    - "80:80"
+    - "8083:8083"
+
+    volumes:
+#    - /home/Manuel/Estudios/Tecnologo/PHP/Proyecto/Proyecto-Quiz-Cooperativo/:/var/www/html/Quiz-Cooperativo
+    - $PWD/:/var/www/html/Quiz-Cooperativo
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: php_contraseña
+      MYSQL_DATABASE: quiz_cooperativo
+      MYSQL_USER: tecnologo
+      MYSQL_PASSWORD: tecnologo

@@ -29,7 +29,7 @@ $total_admins = mysqli_num_rows($resultado);
         <section class="seccion-sala">
             <h2>👥 Unite a una sala</h2>
 
-            <form action="index.php" method="POST">
+            <form action="src/sala/antesala.php" method="POST">
                 <label for="codigo">Código de sala</label>
                 <input type="text" id="codigo" name="codigo"
                        maxlength="6" placeholder="Ej: ABC123" required>
@@ -46,7 +46,7 @@ $total_admins = mysqli_num_rows($resultado);
         <section class="seccion-admin seccion-admin--nueva">
             <h2>⭐ Primer acceso al sistema</h2>
             <p>Para comenzar, creá una cuenta administradora</p>
-            <a href="registro.php" class="boton boton--verde">👥 CREAR ADMINISTRADOR</a>
+            <a href="src/registro.php" class="boton boton--verde">👥 CREAR ADMINISTRADOR</a>
         </section>
         <?php else: ?>
         <section class="seccion-admin">

@@ -1,0 +1,17 @@
+{
+    "name": "equipo-8/quiz-cooperativo",
+    "type": "project",
+    "require": {
+        "cboden/ratchet": "^0.4.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Equipo8\\QuizCooperativo\\": "src/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.0.30"
+        }
+    }
+}
