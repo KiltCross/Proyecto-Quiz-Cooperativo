@@ -25,39 +25,6 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 	private $conexion_sql;
 
 	protected final function __construct(){
-		/* Estructura del array de this->salas:
-		 * Salas:
-		 *	 [Codigo acceso 1] => [Sala 1] 
-		 *	 [Codigo acceso 2] =>  [Sala 2]
-		 *	 ...
-		 * 	 [Codigo acceso N] => [Sala N]
-		 *
-		 * Sala (no es la clase 'Sala', es solo como nombre esta parte de la estructura de datos):
-		 * 	Estado : String
-		 * 	Administrador => [Administrador]
-		 * 	Modalidad : Integer (0: cooperativo; 1: competitivo)
-		 * 	Puntaje actual : Integer
-		 * 	Jugadores => [Jugadores]
-		 * 
-		 * Administrador:
-		 * 	Nombre : String
-		 * 	Conexion => [Conexión WebSocket]
-		 *
-		 *
-		 * Jugadores:
-		 * 	[Nombre Jugador 1] => [Jugador 1]
-		 * 	[Nombre Jugador 2] => [Jugador 2]
-		 * 	[Nombre Jugador 3] => [Jugador 3]
-		 * 	...
-		 * 	[Nombre Jugador N] => [Jugador n]
-		 *
-		 * Jugador:
-		 * 	Puntaje : String
-		 *	Conexion => [Conexión WebSocket]
-		 *
-		 *
-		 *
-		 * */
 
 		$this->administradores = [];	
 
@@ -233,28 +200,44 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 			$numero_de_la_pregunta_actual = 5;
 
-			$la_pregunta_se_repondio_correctamente = true;
+			$la_respuesta_correcta = 3;
 
 			$puntaje_de_la_pregunta_contestada = 100;
+			
+			$tabla_de_puntajes_json = "";
 
-			$es_el_ultimo_jugador_en_responder = true;
+			$se_termino_el_juego = false;
 
-			$la_siguiente_pregunta_json = []
+			$se_termino_la_ronda = true;
+
+			$la_siguiente_pregunta_json = "";
+
+			$las_conexiones_de_los_jugadores = [];
 
 			$resultado_de_la_respuesta_json = json_encode([
 						"numero_de_la_pregunta_actual" => $numero_de_la_pregunta_actual,
-						"la_pregunta_se_repondio_correctamente" => $la_pregunta_se_repondio_correctamente,
+						"la_respuesta_correcta" => $la_respuesta_correcta,
 						"puntaje_de_la_pregunta_contestada" => $puntaje_de_la_pregunta_conetestada,
+						"tabla_de_puntajes" => $tabla_de_puntajes_json
 					]
 );
 				
 			//Si la pregunta actual es la última, entonces $la_siguiente_pregunta_json es igual a false
 
-			if ($es_el_ultimo_jugador_en_responder) {
-				$conexion->send(json_encode(["accion" => "cambio_de_pregunta",
-					"resultado_de_la_respuesta" => $resultado_de_la_respuesta_json,
-					"siguiente_pregunta" => $la_siguiente_pregunta_json
-				]));
+			if ($se_termino_la_ronda) {
+				foreach ($las_conexiones_de_los_jugadores as $una_conexion){
+					$una_conexion->send(json_encode(["accion" => "cambio_de_pregunta",
+						"resultado_de_la_respuesta" => $resultado_de_la_respuesta_json,
+						"siguiente_pregunta" => $la_siguiente_pregunta_json
+					]));
+				}
+
+			}
+			if ($se_termino_el_juego){
+				foreach($las_conexiones_de_los_jugadores as $una_conexion){
+					$una_conexion->send(json_encode(["accion" => "terminar_juego"]));
+
+				}
 
 			}
 			break;
