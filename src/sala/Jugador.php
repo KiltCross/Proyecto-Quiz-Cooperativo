@@ -1,5 +1,7 @@
 <?php
 
+namespace Servidor_Sala\Jugador;
+
 use Ratchet\ConnectionInterface;
 
 
@@ -57,7 +59,7 @@ class Jugador {
     compara la conexion que llega por parametro con la conexion de este jugador
     sirve para identificar quien mando un mensaje al servidor websocket
     */
-    public function Eres_Jugador_con_Esta_Conexion(ConnectionInterface $conexion): bool {
+    public function Eres_El_Jugador_con_Esta_Conexion(ConnectionInterface $conexion): bool {
         return $this->conexion === $conexion;
     }
 

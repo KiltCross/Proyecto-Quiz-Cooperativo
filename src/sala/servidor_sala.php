@@ -1,5 +1,5 @@
 <?php
-namespace quiz_cooperativo\Sala;
+namespace Servidor_Sala\Servidor_Sala;
 require dirname(__DIR__) . '/../vendor/autoload.php';
 use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
