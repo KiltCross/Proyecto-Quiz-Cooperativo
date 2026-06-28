@@ -43,7 +43,7 @@ class Administador {
 		$la_sala_dt = [];
 
 		if (isset($this->sala)){
-			
+			$la_sala_dt = $this->sala->Dar_DT();
 
 		}
 
@@ -56,6 +56,35 @@ class Administador {
 		unset($this->sala);
 
 	}
+
+	public function Unlogin(){
+		$this->conexion->close();
+		unset($this->conexion);
+	}
+
+	public function Tiene_Sala_Activa() : boolean {
+		return isset($this->sala);
+	}
+
+	public function Tiene_Sala_Activa_y_Esta_en_Estado_Esperando() : boolean{
+		if (!isset($this->sala)){
+			return false;
+		}
+		return $this->Esta_en_Estado_Esperando();
+	}
+
+	public function Dar_las_Conexiones_de_los_Jugadors_de_la_Sala_Activa() : Array {
+		return $this->sala->Dar_las_Conexiones_de_los_Jugadors();
+	}
+
+	public function Empezar_Juego() : boolean {
+		return $this->sala->Empezar_Juego($this->conexion);
+	}
+
+	public function Dar_Pregunta_Actual_de_la_Sala_Activa() : Array {
+		return $this->sala->Dar_Pregunta_Actual();
+	}
+
 
 }
 

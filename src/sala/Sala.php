@@ -175,7 +175,7 @@ class Sala {
 	}
 
 
-	public function Responder_Pregunta(ConnectionInterface $la_conexion_del_jugador, integer $la_respuesta) : boolean {
+	public function Responder_Pregunta(mysqli $conexion_bd , ConnectionInterface $la_conexion_del_jugador, integer $la_respuesta) : boolean {
 		$es_el_jugador = false;
 
 		$el_jugador;
@@ -201,6 +201,10 @@ class Sala {
 				break;
 			}
 		}
+
+		$consulta_sql = "UPDATE sala SET pregunta_actual=".$this->numero_pregunta_actual." where condigo_acceso='".$this->condigo_acceso."'";
+		mysqli_query($conexion_bd , $consulta_sql);
+
 		return $es_el_jugador;
 
 	}
@@ -250,6 +254,7 @@ class Sala {
 			$contador_de_jugadores++;
 			if ($es_el_jugador){
 				array_splice($this->los_jugadores,$contador_de_jugadores,1);
+				$la_conexion_del_jugador->close();
 				break;
 			}
 		}
@@ -259,32 +264,29 @@ class Sala {
 
 	}
 
-	public function Agregar_Jugador(mysqli $la_conexion_bd, String $nombre_jugador , ConnectionInterface $la_conexion_ws) {
+	public function Agregar_Jugador(mysqli $la_conexion_bd, String $nombre_jugador , ConnectionInterface $la_conexion_ws) : boolean {
 
 		$sql_consulta = "INSERT INTO jugador (nombre) values ($nombre_jugador)";
 		if (!isset($this->los_jugadores[$nombre_jugador])){
 			$this->los_jugadores[] = [$nombre_jugador => Jugador($nombre_jugador , $la_conexion_ws)];
 			mysqli_query($la_conexion_bd , $sql_consulta);
+			return true;
 		}
+		return false;
 
 	}
 
-	public function Dar_DT() : Array {
-		$el_dt_de_retorno = [
-			"codigo_acceso" => $this->codigo_acceso,
-			"estado" => $this->estado,
-			"modalidad" => $this->modalidad,
-			"numero_pregunta_actual" => $this->numero_pregunta_actual,
-			"puntaje_colectivo" => $this->puntaje_colectivo,
-			"nombre_conjunto" => $this->nombre_conjunto,
-			"numero_de_jugadores_conectados" => count($this->los_jugadores)
-		];
-
-		return $el_dt_de_retorno;
-	}
 
 	public function Se_Termino_El_Juego() : boolean {
 		return (count($this->los_jugadores) - 1) == $this->numero_pregunta_actual;
+	}
+
+	public function Esta_en_Estado_Esperando() : boolean {
+		return $this->estado == Estado::Esperando;
+	}
+
+	public function Dar_Pregunta_Actual() : Array {
+		return $this->las_preguntas[$this->numero_pregunta_actual]->Dar_DT();
 	}
 }
 
