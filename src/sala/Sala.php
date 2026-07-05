@@ -32,9 +32,9 @@ class Sala {
 		$this->numero_pregunta_actual = 0;
 		$this->nombre_conjunto = $nombre_conjunto;
 		$this->el_administrador = &$el_administrador;
-		#$this->codigo_acceso = uniqid('', true);
-		#$this->codigo_acceso = str_split($this->codigo_acceso , 6)[0];
-		$this->codigo_acceso = "6a4373";
+		$this->codigo_acceso = uniqid('', true);
+		$this->codigo_acceso = str_split($this->codigo_acceso , 6)[0];
+		#$this->codigo_acceso = "6a4373";
 		$this->los_jugadores = [];
 		$this->las_preguntas = [];
 
