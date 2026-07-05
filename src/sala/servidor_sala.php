@@ -1,12 +1,20 @@
 <?php
 namespace Servidor_Sala\Servidor_Sala;
 require dirname(__DIR__) . '/../vendor/autoload.php';
+require dirname(__DIR__) . '/sala/administrador.php';
+require dirname(__DIR__) . '/sala/Sala.php';
 use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
 use Ratchet\ConnectionInterface;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
 use Ratchet\WebSocket\MessageComponentInterface as WebSocketMessageComponentInterface;
+use Servidor_Sala\Administrador as Administrador;
+use Servidor_Sala\Sala as Sala;
+#include dirname(__DIR__).'/sala/Estado.php';
+#include dirname(__DIR__).'/sala/Modalidad.php';
+use Servidor_Sala\Estado;
+use Servidor_Sala\Modalidad;
 
 //Los objetos que terminan con "_json" deben de ser string en formato json.
 //
@@ -26,18 +34,22 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 	protected final function __construct(){
 
-		$this->administradores = [];	
-		$this->salas = [];
+		$this->administradores = array();	
+		$this->salas = array();
 
-		$this->conexion_sql = mysqli_connect("mysql", "tecnologo", "tecnologo", "quiz_cooperativo", 3306);
+		$this->conexion_sql = mysqli_connect("localhost", "tecnologo", "tecnologo", "quiz_cooperativo");
 
 		if (!$this->conexion_sql) {
-			die("Error de conexión: " . mysqli_connect_error());
+			echo "Error de conexión: " . mysqli_connect_error();
+			exit();
 		}
 
 		mysqli_set_charset($this->conexion_sql, "utf8");
 
 
+		ini_set('default_charset', 'utf-8');
+		setlocale(LC_CTYPE, 'es.UTF-8');
+		mb_internal_encoding("UTF-8");
 
 
 		
@@ -53,7 +65,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			self::$instancia = IoServer::factory(
 			new HttpServer(
 				new WsServer(
-					new Sala()
+					new Servidor_Sala()
 				)
 			),8083
 		);
@@ -68,10 +80,6 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 	public function onOpen(ConnectionInterface $conexion){
 		
-		if (count($this->salas) === 0){
-			echo "Error al ingresar a la sala: No hay salas.\n";
-			return;
-		}
 
 		$parametros_string = $conexion->httpRequest->getUri()->getQuery();
 		parse_str($parametros_string, $parametros_array);
@@ -107,8 +115,11 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 		$usuario_es_jugador = true;
 		if (isset($parametros_array["tipo_usuario"])){
-			$usuario_es_jugador =  $parametros_array["tipo_usuario"] === 'administrador';
+			$usuario_es_jugador =  $parametros_array["tipo_usuario"] !== 'administrador';
 		}
+
+		#echo "Tipo usuario ".$parametros_array["tipo_usuario"]."\n";
+		#echo "Usuario es jugador :".($parametros_array["tipo_usuario"] != 'administrador')."\n";
 
 	
 
@@ -118,6 +129,17 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 		//Primero van los filtros para en caso de que el usuario sea administrador
 
 		if ($usuario_es_jugador){
+
+			$jugador_ya_esta_conectade= true;
+
+			foreach($this->salas as $una_sala){
+				$jugador_ya_esta_conectade = $jugador_ya_esta_conectade && $una_sala->Existe_Jugador_con_Esta_Conexion($conexion);
+			}
+
+			if ($jugador_ya_esta_conectade){
+				$this->Enviar_Error_y_Conservar_Conexion($conexion, "El Jugador ya esta conectade.");
+				return;
+			}
 
 			if (!isset($parametros_array["nombre"])){
 				$this->Enviar_Error_y_Cerrar_Conexion($conexion , "No se pasó el nombre del Jugador.");
@@ -134,22 +156,27 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 				);
 				return;
 			}
-			$se_pudo_agregar_el_jugador = $this->salas[$parametros_array["codigo_acceso"]]->Agregar_Jugador($parametros_array["nombre"] , $conexion);
+			if ($this->salas[$parametros_array["codigo_acceso"]]->Existe_Jugador_con_Este_Nombre($parametros_array["nombre"])){
+				$this->Enviar_Error_y_Conservar_Conexion($conexion, "Ya existe un jugador con nombre '".$parametros_array["nombre"]."' en la sala '".$parametros_array["codigo_acceso"]."'.");
+				return;
+			}
+			$se_pudo_agregar_el_jugador = $this->salas[$parametros_array["codigo_acceso"]]->Agregar_Jugador($this->conexion_sql , $parametros_array["nombre"] , $conexion);
 			if (!$se_pudo_agregar_el_jugador) {
 				$this->Enviar_Error_y_Cerrar_Conexion($conexion , 
 					"No se pudo agregar el Jugador: '".$parametros_array["nombre"]."' a la Sala: '".$parametros_array["codigo_acceso"]."'."
 				);
 				return;
 			}
-
-			$la_sala_a_la_que_se_unio_el_jugador_json = json_encode($this->salas["codigo_acceso"]->Dar_DT());
-			$estado_de_la_sala_a_la_que_se_unio_el_jugador = $this->sala["codigo_acceso"]->Dar_Estado()->valor;
+			$la_sala_a_la_que_se_unio_el_jugador_json = json_encode($this->salas[$parametros_array["codigo_acceso"]]->Dar_DT());
+			$estado_de_la_sala_a_la_que_se_unio_el_jugador = $this->salas[$parametros_array["codigo_acceso"]]->Dar_Estado();
 			if ($estado_de_la_sala_a_la_que_se_unio_el_jugador == "esperando"){
-				$conexion->send(json_encode(["accion" => "informar_acceso_a_sala", "estado_sala" => $estado_de_la_sala_a_la_que_se_unio_el_jugador , "sala" => $la_sala_a_la_que_se_unio_el_jugador_json]);
-				return
+				#echo "Retorno del login de jugador: "."{\"accion\" : \"informar_acceso_a_sala\", \"estado_sala\" : \"$estado_de_la_sala_a_la_que_se_unio_el_jugador\" , \"sala\" : $la_sala_a_la_que_se_unio_el_jugador_json}";
+				$conexion->send("{\"accion\" : \"informar_acceso_a_sala\", \"estado_sala\" : \"$estado_de_la_sala_a_la_que_se_unio_el_jugador\" , \"sala\" : $la_sala_a_la_que_se_unio_el_jugador_json}");
+				return;
 			}
 		
-			$conexion->send(json_encode(["accion" => "informar_acceso_a_sala", "estado_sala" => $estado_de_la_sala_a_la_que_se_unio_el_jugador);
+				#echo "Retorno del login de jugador: "."{\"accion\" : \"informar_acceso_a_sala\", \"estado_sala\" : \"$estado_de_la_sala_a_la_que_se_unio_el_jugador\"}";
+			$conexion->send("{\"accion\" : \"informar_acceso_a_sala\", \"estado_sala\" : $estado_de_la_sala_a_la_que_se_unio_el_jugador}");
 
 		} else {
 			if (!isset($parametros_array["email"])){
@@ -162,19 +189,59 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			}
 
 			//$login: true: el login salio bien; false: el login salio mal
-			$login = true;
+			$login = false;
+
+			$los_administradores_obtenidos_de_la_bd = mysqli_query($this->conexion_sql , "SELECT email, password from administrador");
+			if ($los_administradores_obtenidos_de_la_bd){
+
+			while ($un_administrador_obtenido_de_la_bd = mysqli_fetch_assoc($los_administradores_obtenidos_de_la_bd)){
+				$login = $un_administrador_obtenido_de_la_bd["email"] === $parametros_array["email"] and $un_administrador_obtenido_de_la_bd["password"] === $parametros_array["contrasenia"];
+				if ($login){
+					break;
+				}
+			}
+			}
 			if ($login){
 
 				//Se agrega el admin a la lista de admins activos.
 
-				if(!isset($this->administradores[$parametros_array["email"]])){
-					$this->administradores[] = [$parametros_array["email"] => Administrador($parametros_array["email"] , $conexion)];
-				}
+				$la_sala_a_retornar= false;
 				
+				if(!isset($this->administradores[$parametros_array["email"]])){
+					$this->administradores[$parametros_array["email"]] = new Administrador($parametros_array["email"] , $conexion);
+				} else {
+					if (!$this->administradores[$parametros_array["email"]]->Esta_Logeado()){
+						$this->administradores[$parametros_array["email"]]->Set_Conexion($conexion);
+					}
 
-				$conexion->send(json_encode(["accion" => "dar_sala_activa", "sala" => false]))
+					if ($this->administradores[$parametros_array["email"]]->Tiene_Sala_Activa()){
+						$la_sala_a_retornar = json_encode($this->administradores[$parametros_array["email"]]->Dar_Sala_Activa());
+					}
+					
+				}
+				if (!$la_sala_a_retornar){
+					$la_sala_a_retornar = "false";
+				}
+					
+				echo "Login Admin Respuesta: ". "{\"accion\" : \"dar_sala_activa\", \"sala\" : $la_sala_a_retornar}";
+				$conexion->send("{\"accion\" : \"dar_sala_activa\", \"sala\" : $la_sala_a_retornar}");
 
+			} else {
+				$this->Enviar_Error_y_Cerrar_Conexion($conexion , "Error en al ingresar, credenciales inválidas.");
 			}
+			echo "\n\n";
+			echo "Open";
+			echo "\n";
+			var_dump($parametros_array);
+			echo "\n";
+			foreach ($this->salas as $nombre => $sala){
+				echo $nombre."\n";
+			}
+			echo "\n";
+			foreach ($this->administradores as $nombre => $admin){
+				echo $nombre."\n";
+			}
+			echo "\n\n";
 			return;
 		}
 
@@ -189,7 +256,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 		}
 
 		//Borra el jugador almacinado en memoria (memoria volatil, no en la base de datos)
-		//Ó elimina el ConnectionInterface del administrador y se remueve el administador de la lista de administrador conectados.
+		//Ó elimina el ConnectionInterface del administrador y se remueve el administrador de la lista de administrador conectados.
 
 		$es_administrador = false;
 
@@ -209,6 +276,19 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 				return;
 			}
 		}
+			echo "\n\n";
+			echo "Close";
+			echo "\n";
+			var_dump($parametros_array);
+			echo "\n";
+			foreach ($this->salas as $nombre => $sala){
+				echo $nombre."\n";
+			}
+			echo "\n";
+			foreach ($this->administradores as $nombre => $admin){
+				echo $nombre."\n";
+			}
+			echo "\n\n";
 
 
 	}
@@ -231,8 +311,13 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 					$la_sala_activa_json = json_encode($un_administrador->Dar_Sala_Activa());
 				}
 			}
+			if (!$la_sala_activa_json){
+				$la_sala_activa_json = "false";
+			}
+
 			//Si no hay sala activa alguna, entonces $la_sala_activa_json es igual a false
-			$conexion->send(json_encode(["accion"=> "dar_sala_activa", "sala" => $la_sala_activa_json]));
+			//echo "Obtener Sala Activa; respuesta: ". "{\"accion\": \"dar_sala_activa\", \"sala\" : $la_sala_activa_json}";
+			$conexion->send("{\"accion\": \"dar_sala_activa\", \"sala\" : $la_sala_activa_json}");
 				break;
 			;;
 		case "crear_sala":
@@ -255,7 +340,8 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 			$se_encontro_el_administrador=false;
 
-			foreach($this->administradores as $un_administrador){
+
+			foreach($this->administradores as $email_admin => $un_administrador){
 				if ($un_administrador->Eres_el_Administrador_de_Esta_Conexion($conexion)){
 					$el_administrador = $un_administrador;
 					$se_encontro_el_administrador = true;
@@ -264,18 +350,30 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			if (!$se_encontro_el_administrador){
 				return;
 			}
-			
-			$la_nueva_sala = Sala($this->conexion_sql , $el_mensaje["sala"]["modalidad"], $el_mensaje["sala"]["nombre_conjunto"], &$el_administrador);
 
-			$la_nueva_sala_json = json_encode($la_nueva_sala->Dar_DT()); 
+			$la_modalidad;
+
+			switch ($el_mensaje["sala"]["modalidad"]){
+			case 'cooperativo':
+				$la_modalidad = 'cooperativa';
+				break;
+			case 'competitivo':
+				$la_modalidad = 'competitiva';
+				break;
+			}
+			
+			$la_nueva_sala = new Sala($this->conexion_sql , $la_modalidad, $el_mensaje["sala"]["nombre_conjunto"], $el_administrador);
+
+			$la_nueva_sala_json;
+		       $la_nueva_sala_json = json_encode($la_nueva_sala->Dar_DT()); 
 
 			//Se agrega la sala a la lista de salas del sevidor
 	
-			$this->salas[] = [ $la_nueva_sala->Dar_Codigo_Acceso() => $la_nueva_sala];
+			$this->salas[$la_nueva_sala->Dar_Codigo_Acceso()] = $la_nueva_sala;
 
 
 
-			$conexion->send(json_encode(["accion" => "dar_sala_activa", "sala" => $la_nueva_sala_json]));
+			$conexion->send("{\"accion\" : \"dar_sala_activa\", \"sala\" : $la_nueva_sala_json}");
 
 			break;
 			;;
@@ -285,7 +383,9 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			//
 			//Se sabe cual es el jugador debida a que el ConnectionInterface de un jugador guardado es igual a $conexion
 
-			Sala $la_sala;
+			echo "Punto tres\n";
+
+			$la_sala;
 			foreach ($this->salas as $una_sala){
 				if ($una_sala->Responder_Pregunta($this->conexion_sql, $conexion , $el_mensaje["respuesta"]["id"])){
 					$la_sala = $una_sala;
@@ -295,24 +395,27 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			if (!isset($la_sala)){
 				return;
 			}
+			echo "Punto uno\n";
 			if (!$la_sala->Se_Termino_Ronda()){
 				return;
 			}
 			
 			$tabla_de_puntajes_y_conexiones_array = $la_sala->Dar_Tabla_de_Puntajes_y_Conexiones();
 
+
 			$tabla_de_puntajes_array = [];
 
 			$las_conexiones_de_los_jugadores = [];
 
+
 			foreach($tabla_de_puntajes_y_conexiones_array as $nombre_jugador => $puntaje_y_conexion){
-				$tabla_de_puntajes_array[] = [$nombre_jugador => $puntaje_y_conexion[0]];
+				$tabla_de_puntajes_array[$nombre_jugador] = $puntaje_y_conexion[0];
 				$las_conexiones_de_los_jugadores[] = $puntaje_y_conexion[1];
 			}
 
 			$tabla_de_puntajes_json = json_encode($tabla_de_puntajes_array);
 
-			$numero_de_la_pregunta_actual = $la_sala->Dar_Numero_Pregunta_Actual();
+			$numero_de_la_pregunta_actual = $la_sala->Dar_Numero_Pregunta_Actual() + 1;
 
 			$datos_para_cambio_de_ronda_array = $la_sala->Terminar_Ronda();
 
@@ -326,36 +429,55 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			$se_termino_el_juego = $la_sala->Se_Termino_El_Juego();
 
 
+		
 
-			$modo_de_juego = $la_sala->Dar_Estado->value;
+			$modo_de_juego = $la_sala->Dar_Modalidad();
 
 
-			$resultado_de_la_respuesta_json = json_encode([
-						"numero_de_la_pregunta_actual" => $numero_de_la_pregunta_actual,
-						"la_respuesta_correcta" => $la_respuesta_correcta,
-						"puntaje_de_la_pregunta_contestada" => $puntaje_de_la_pregunta_conetestada,
-						"tabla_de_puntajes" => $tabla_de_puntajes_json,
-						"modo_de_juego" => $modo_de_juego
-					]
-);
+			$resultado_de_la_respuesta_json = "";
+
+			switch ($la_sala->Dar_Modalidad()){
+			case 'cooperativa':
+			$resultado_de_la_respuesta_json = "{
+						\"numero_de_la_pregunta_actual\" : $numero_de_la_pregunta_actual,
+						\"la_respuesta_correcta\" : $la_respuesta_correcta,
+						\"puntaje_de_la_pregunta_contestada\" : $puntaje_de_la_pregunta_contestada,
+						\"puntaje_colectivo\" : $la_sala->Dar_Puntaje_Colectivo(),
+						\"modo_de_juego\" : \"$modo_de_juego\"
+					}";
+				break;
+			case 'competitiva':
+			$resultado_de_la_respuesta_json = "{
+						\"numero_de_la_pregunta_actual\" : $numero_de_la_pregunta_actual,
+						\"la_respuesta_correcta\" : $la_respuesta_correcta,
+						\"puntaje_de_la_pregunta_contestada\" : $puntaje_de_la_pregunta_contestada,
+						\"tabla_de_puntajes\" : $tabla_de_puntajes_json,
+						\"modo_de_juego\" : \"$modo_de_juego\"
+					}";
+			break;
+			}
+
 				
 			//Si la pregunta actual es la última, entonces $la_siguiente_pregunta_json es igual a false
 
 			if (!$se_termino_el_juego) {
+				echo "Mensaje enivado al terminar el juego: "."{\"accion\" : \"cambio_de_pregunta\",\"resultado_de_la_respuesta\" : $resultado_de_la_respuesta_json, \"siguiente_pregunta\" : $la_siguiente_pregunta_json}\n";
 				foreach ($las_conexiones_de_los_jugadores as $una_conexion){
-					$una_conexion->send(json_encode(["accion" => "cambio_de_pregunta",
-						"resultado_de_la_respuesta" => $resultado_de_la_respuesta_json,
-						"siguiente_pregunta" => $la_siguiente_pregunta_json
-					]));
+					$una_conexion->send("{\"accion\" : \"cambio_de_pregunta\",
+						\"resultado_de_la_respuesta\" : $resultado_de_la_respuesta_json,
+						\"siguiente_pregunta\" : $la_siguiente_pregunta_json
+					}");
 				}
 
 			}else {
+				echo "Mensaje enviado al cambiar de pregunta: "."{\"accion\" : \"terminar_juego\", \"resultade_de_la_respuesta\" : $resultado_de_la_respuesta_json}\n";
 				foreach($las_conexiones_de_los_jugadores as $una_conexion){
-					$una_conexion->send(json_encode(["accion" => "terminar_juego",
-						"resultade_de_la_respuesta" => $resultado_de_la_respuesta_json
-					]));
+					$una_conexion->send("{\"accion\" : \"terminar_juego\",
+						\"resultade_de_la_respuesta\" : $resultado_de_la_respuesta_json
+					}");
 
 				}
+				$la_sala->Terminar_Juego($this->conexion_sql);
 
 			}
 			break;
@@ -390,7 +512,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 				return;
 			}
 
-			if (!$el_administrador_que_inicia_el_juego->Empezar_Juego()){
+			if (!$el_administrador_que_inicia_el_juego->Empezar_Juego($this->conexion_sql)){
 				$this->Enviar_Error_y_Conservar_Conexion($conexion , "No se pudo emezar el juego");
 				return;
 			}
@@ -409,34 +531,73 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 			foreach ($las_conexiones_de_los_jugadores as $una_conexion_de_un_jugador){
 				
-				$una_conexion_de_un_jugador->send(json_encode(["accion" => "avisar_comienzo_del_juego" , "primera_pregunta" => $la_primera_pregunta_json]));
+				$una_conexion_de_un_jugador->send("{\"accion\" : \"avisar_comienzo_del_juego\" , \"primera_pregunta\" : $la_primera_pregunta_json }");
 
 			}
 
 			//Se cambia el estado de la sala a "jugando"
 			
-
-			$conexion->send(json_encode(["accion" => "dar_sala_activa" , "sala" => $la_sala_json]));
-
+			echo "'dar_sala_activa' en 'Empezar_Juego: '" . "{\"accion\" : \"dar_sala_activa\" , \"sala\" : $la_sala_json }";
+			$conexion->send("{\"accion\" : \"dar_sala_activa\" , \"sala\" : $la_sala_json }");
+			break;
 
 
 		}
+			echo "\n\n";
+			echo "Message";
+			echo "\n";
+			var_dump($el_mensaje);
+			echo "\n";
+			foreach ($this->salas as $nombre => $sala){
+				echo $nombre."\n";
+			}
+			echo "\n";
+			foreach ($this->administradores as $nombre => $admin){
+				echo $nombre."\n";
+			}
+			echo "\n\n";
 	}
 
 	public function onError(ConnectionInterface $conexion, \Exception $e) {
 		echo "Error: {$e->getMessage()}\n";
-		$this->Enviar_Error_y_Cerrar_Conexion($e->getMessage(());
+		$this->Enviar_Error_y_Cerrar_Conexion($conexion, $e->getMessage());
 	}
 	
 	protected function Enviar_Error_y_Cerrar_Conexion(ConnectionInterface $conexion, string $mensaje) {
 		#echo $mensaje;
-		$conexion->send(json_encode(["accion" => "error", "mensaje" => $mensaje]))
+		if (count($this->salas) !== 0){
+		
+		
+
+		//Borra el jugador almacinado en memoria (memoria volatil, no en la base de datos)
+		//Ó elimina el ConnectionInterface del administrador y se remueve el administrador de la lista de administrador conectados.
+
+		$es_administrador = false;
+
+		foreach($this->administradores as $un_administrador){
+			if ($un_administrador->Eres_el_Administrador_de_Esta_Conexion($conexion)){
+				$un_administrador->Unlogin();
+				break;
+			}
+		}
+
+		if ($es_administrador){
+			return;
+		}
+		
+		foreach($this->salas as $una_sala){
+			if ($una_sala->Borrar_Jugador_con_Esta_Conexion($conexion)){
+				return;
+			}
+		}
+		}
+		$conexion->send("{\"accion\" : \"error_fatal\", \"mensaje\" : \"$mensaje\" }");
 		$conexion->close();
 
 	}
 	protected function Enviar_Error_y_Conservar_Conexion(ConnectionInterface $conexion, string $mensaje) {
 		#echo $mensaje;
-		$conexion->send(json_encode(["accion" => "error", "mensaje" => $mensaje]));
+		$conexion->send("{\"accion\" : \"error\", \"mensaje\" : \"$mensaje\"}");
 	}
 
 	

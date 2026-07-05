@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html lang="es">
+	<head>
+	</head>
+	<body>
+		<div id="zona_admin">
+			<button onclick="Conectar_Admin()">Conectar Admin</button>
+			<button onclick="Crear_Sala()">Crear Sala</button>
+			<button onclick="Empezar_Juego()">Empezar Juego</button>
+			<button onclick="Cerrar_Admin()">Cerrar Admin</button>
+		<div id="admin_data">
+		</div>
+		</div>
+		<div id ="zona_jugador">
+			<div id="zona_jugador_uno">
+				<button onclick="Conectar_Jugador_1()">Conectar Jugador 1</button>
+				<button onclick="Responder_Primera_Pregunta_Jugador_1()">Responder Primera Pregunta Jugador 1</button>
+				<button onclick="Cerrar_Jugador_1()">Cerrar Jugador 1</button>
+			</div>
+			<div id="zona_jugador_dos">
+				<button onclick="Conectar_Jugador_2()">Conectar Jugador 2</button>
+				<button onclick="Responder_Primera_Pregunta_Jugador_2()">Responder Primera Pregunta Jugador 2</button>
+				<button onclick="Cerrar_Jugador_2()">Cerrar Jugador 2</button>
+			</div>
+			<div id="zona_jugador_tres">
+				<button onclick="Conectar_Jugador_3()">Conectar Jugador 3</button>
+				<button onclick="Responder_Primera_Pregunta_Jugador_3()">Responder Primera Pregunta Jugador 3</button>
+				<button onclick="Cerrar_Jugador_3()">Cerrar Jugador 3</button>
+			</div>
+
+		<div id="jugador_data">
+		</div>
+		</div>
+	</body>
+	<script>
+		/*
+		if (typeof decodeURIcomponent !== 'function'){
+			function decodeURIcomponent(datos){
+				return unescape(datos);
+			}
+		}*/
+
+		let admin;
+		let jugador_1;
+		let jugador_2;
+		let jugador_3;
+		function Conectar_Admin(){
+			 admin = new WebSocket("ws://localhost:8083?tipo_usuario=administrador&email=A@A.com&contrasenia=AAA");
+
+			admin.onopen = function (event){
+
+			}
+
+			admin.onmessage = function (event) {
+				//let el_mensaje = decodeURIcomponent(JSON.parse(event.data));
+				let el_mensaje = JSON.stringify(JSON.parse(event.data));
+				admin_data_div = document.getElementById('admin_data');
+				admin_data_div.innerHTML += `<p>Mensaje Recibido: <b>${el_mensaje}</b>; desde el servidor.</i>`;
+				
+			}
+		}
+		function Crear_Sala(){
+
+				admin.send('{"accion" : "crear_sala" , "sala" : { "modalidad": "competitivo", "nombre_conjunto" : "musica"  } }');
+		}
+		
+		function Empezar_Juego(){
+			admin.send('{"accion" : "empezar_juego"}');
+		}
+
+		function Cerrar_Admin(){
+			admin.close();
+		}
+		function Conectar_Jugador_1(){
+			jugador_1 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=6a4373&nombre=Ichi");
+
+			jugador_1.onopen = function (event){}
+
+			jugador_1.onmessage = function (event){
+				let el_mensaje = JSON.stringify(JSON.parse(event.data));
+				//let el_mensaje = unescape(event.data);
+				//let el_mensaje = event.data;
+				jugador_data_div = document.getElementById('jugador_data');
+				jugador_data_div.innerHTML += `<p>Jugador 1: Mensaje Redibido: <b>${el_mensaje}</b> ; desde el servidor.</p>`;
+
+			}
+
+		}
+
+		function Responder_Primera_Pregunta_Jugador_1(){
+			jugador_1.send('{"accion" : "responder_pregunta_actual" , "respuesta" : {"id" : 1}}');
+		}
+		function Cerrar_Jugador_1(){
+			jugador_1.close();
+		}
+
+		function Conectar_Jugador_2(){
+			jugador_2 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=6a4373&nombre=Ni");
+			
+			jugador_2.onopen = function (event) {}
+
+			jugador_2.onmessage = function (event) {
+				let el_mensaje = JSON.stringify(JSON.parse(event.data));
+				jugador_data_div = document.getElementById('jugador_data');
+				jugador_data_div.innerHTML += `<p>Jugador 2: Mensaje Recibido: <b>${el_mensaje}</b> ; desde el servidor. </p>`;
+			}
+		}
+		function Responder_Primera_Pregunta_Jugador_2() {
+			jugador_2.send('{"accion" : "responder_pregunta_actual" , "respuesta" : {"id" : 2 }}');
+		}
+
+		function Cerrar_Jugador_2(){
+			jugador_2.close();
+		}
+		function Conectar_Jugador_3(){
+			jugador_3 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=6a4373&nombre=San");
+			
+			jugador_3.onopen = function (event) {}
+
+			jugador_3.onmessage = function (event) {
+				let el_mensaje = JSON.stringify(JSON.parse(event.data));
+				jugador_data_div = document.getElementById('jugador_data');
+				jugador_data_div.innerHTML += `<p>Jugador 3: Mensaje Recibido: <b>${el_mensaje}</b> ; desde el servidor </p>`;
+			}
+		}
+		function Responder_Primera_Pregunta_Jugador_3(){
+			jugador_3.send('{"accion" : "responder_pregunta_actual" , "respuesta" : {"id" : 2}}');
+		}
+		function Cerrar_Jugador_3(){
+			jugador_3.close();
+		}
+
+
+
+	</script>
+</html>

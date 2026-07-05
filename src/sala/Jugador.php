@@ -1,6 +1,5 @@
 <?php
-
-namespace Servidor_Sala\Jugador;
+namespace Servidor_Sala;
 
 use Ratchet\ConnectionInterface;
 
@@ -11,6 +10,7 @@ class Jugador {
     private string $nombre;
     private int $puntuacion;
     private ConnectionInterface $conexion;
+    private int $numero_de_la_opcion_seleccionada;
 
     /*
     indica si el jugador ya respondio la pregunta actual
@@ -23,7 +23,12 @@ class Jugador {
         $this->nombre = $nombre;
         $this->puntuacion = 0;
         $this->conexion = $conexion;
-        $this->ha_respondido_la_pregunta_actual = false;
+	$this->ha_respondido_la_pregunta_actual = false;
+	$this->numero_de_la_opcion_seleccionada = -1;
+    }
+
+    public function __destruct(){
+	    $this->conexion->close();
     }
 
 
@@ -31,7 +36,7 @@ class Jugador {
     se llama cuando arranca una nueva ronda/pregunta
     resetea el flag de "ya respondio" para que pueda volver a responder
     */
-    public function Cambio_de_Ronda(): void {
+    public function Cambiar_Ronda(): void {
         $this->ha_respondido_la_pregunta_actual = false;
     }
 
@@ -51,7 +56,19 @@ class Jugador {
     */
     public function Cambiar_Puntaje(int $puntos): void {
         $this->puntuacion += $puntos;
-        $this->ha_respondido_la_pregunta_actual = true;
+    }
+
+    public function Respondio(int $numero_opcion) :void {
+	    $this->ha_respondido_la_pregunta_actual = true;
+	    $this->numero_de_la_opcion_seleccionada = $numero_opcion;
+    }
+
+    public function Dar_Opcion_Respondida() : int {
+	    return $this->numero_de_la_opcion_seleccionada;
+    }
+
+    public function Set_Opcion_Respondida(int $numero_opcion) {
+	    $this->numero_de_la_opcion_seleccionada = $numero_opcion;
     }
 
 

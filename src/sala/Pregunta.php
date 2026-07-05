@@ -1,6 +1,5 @@
 <?php
-
-namespace Servidor_Sala\Pregunta;
+namespace Servidor_Sala;
 
 class Pregunta {
 
@@ -26,28 +25,31 @@ class Pregunta {
     }
      */
 
-    public function __construct(mysqli $conexion_bd, int $numero, string $texto, int $puntaje, string $nombre_conjunto , string $el_email_del_administrador) {
+    public function __construct(\mysqli $conexion_bd, int $numero, string $texto, int $puntaje, int $id_pregunta) {
         $this->numero = $numero;
         $this->texto = $texto;
 	$this->puntaje = $puntaje;
 	$this->opciones = [];
+	$this->respuesta_correcta = -1;
 
-	$consulta_sql = "SELECT * FROM opciones  WHERE id_pregunta IN (
-		SELECT id FROM pregunta WHERE id_conjunto IN (
-			SELECT id FROM conjunto WHERE nombre=$nombre_conjunto and id_admin IN (
-				SELECT id from administador where email = $el_email_del_administrador
-			)
-		)
-	)";
+
+	$consulta_sql = "SELECT * FROM opciones  WHERE id_pregunta=$id_pregunta";
+
+	echo "La consulta utilizadad para obtener las opciones al crear una instancia de Pregunta; es: \n";
+	echo $consulta_sql;
+	echo "\n";
 
 	$contador_de_opciones = 1;	
 
 	$las_opciones_extraidas_de_la_bd = mysqli_query($conexion_bd,$consulta_sql);
-
+	
+	echo "Las Opciones de la Pregunta ".$this->numero.": \n";
 	while ($una_opcion = mysqli_fetch_assoc($las_opciones_extraidas_de_la_bd)){
-
-		$this->opciones[] = [$una_opcion["texto"]];
-		if ($una_opcion["es_correcta"] === 1){
+		echo "+";
+		var_dump($una_opcion);
+		echo "\n";
+		$this->opciones[] = $una_opcion["texto"];
+		if ($una_opcion["es_correcta"] === '1'){
 			$this->respuesta_correcta = $contador_de_opciones;
 		}
 		$contador_de_opciones++;

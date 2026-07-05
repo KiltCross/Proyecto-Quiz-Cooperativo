@@ -1,18 +1,25 @@
 <?php
-namespace Servidor_Sala\Administrador;
+namespace Servidor_Sala;
 
 
 use Ratchet\ConnectionInterface;
-use Servidor_Sala\Sala;
+#use Servidor_Sala\Sala;
 
-class Administador {
+class Administrador {
 	private String $email;
 	private ConnectionInterface $conexion;
-	private sala; //No se especifica el tipo para que no haya un error de depencencias circulares.
+	private $sala; //No se especifica el tipo para que no haya un error de depencencias circulares.
 
 	public function __construct(string $email, ConnectionInterface $conexion){
 		$this->email = $email;
 		$this->conexion = $conexion;
+	}
+	public function __destruct(){
+		$this->conexion->close();
+	}
+
+	public function Set_Conexion(ConnectionInterface $la_nueva_conexion){
+		$this->conexion = $la_nueva_conexion;
 	}
 
 	public function Dar_Email() : string {
@@ -28,7 +35,11 @@ class Administador {
 
 	public function Eres_el_Administrador_de_Esta_Conexion(ConnectionInterface $conexionWS): bool{
 
-		return $this->conexion == $conexionWS;
+		if (isset($this->conexion)){
+			return $this->conexion == $conexionWS;
+		} else {
+			return false;
+		}
 
 	}
 
@@ -62,27 +73,31 @@ class Administador {
 		unset($this->conexion);
 	}
 
-	public function Tiene_Sala_Activa() : boolean {
+	public function Tiene_Sala_Activa() : bool {
 		return isset($this->sala);
 	}
 
-	public function Tiene_Sala_Activa_y_Esta_en_Estado_Esperando() : boolean{
+	public function Tiene_Sala_Activa_y_Esta_en_Estado_Esperando() : bool{
 		if (!isset($this->sala)){
 			return false;
 		}
-		return $this->Esta_en_Estado_Esperando();
+		return $this->sala->Esta_en_Estado_Esperando();
 	}
 
 	public function Dar_las_Conexiones_de_los_Jugadors_de_la_Sala_Activa() : Array {
 		return $this->sala->Dar_las_Conexiones_de_los_Jugadors();
 	}
 
-	public function Empezar_Juego() : boolean {
-		return $this->sala->Empezar_Juego($this->conexion);
+	public function Empezar_Juego(\mysqli $consulta_sql) : bool {
+		return $this->sala->Empezar_Juego($consulta_sql , $this->conexion);
 	}
 
 	public function Dar_Pregunta_Actual_de_la_Sala_Activa() : Array {
 		return $this->sala->Dar_Pregunta_Actual();
+	}
+
+	public function Esta_Logeado() : bool {
+		return isset($this->conexion);
 	}
 
 
