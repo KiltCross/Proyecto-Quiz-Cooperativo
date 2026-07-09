@@ -208,6 +208,36 @@ main.contenido {
 
 
 /* ------------------------------------
+   FORMULARIO CREAR SALA — modalidad
+------------------------------------ */
+
+.fila-modalidad {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0 16px;
+}
+
+.opcion-modalidad {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.opcion-modalidad:has(input:checked) {
+    border-color: #6c5ce7;
+    background: #f3f1fd;
+}
+
+
+/* ------------------------------------
    BOTONES — uso global
 ------------------------------------ */
 
@@ -385,7 +415,8 @@ body.pagina-dashboard {
 
 .panel input[type="text"],
 .panel input[type="number"],
-.panel input[type="email"] {
+.panel input[type="email"],
+.panel select {
     width: 100%;
     padding: 12px 14px;
     font-size: 15px;
@@ -519,4 +550,42 @@ body.pagina-dashboard {
 
 .fila-opcion input[type="text"] {
     flex: 1;
+}
+
+
+/*
+   MODALIDAD (dashboard.php / crear.php)
+*/
+
+.fila-modalidad {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.opcion-modalidad {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 2px solid #d0d5e8;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333333;
+    cursor: pointer;
+    background: #fafafa;
+    transition: border-color 0.2s;
+}
+
+.opcion-modalidad input[type="radio"] {
+    width: auto;
+    cursor: pointer;
+    accent-color: #6c5ce7;
+}
+
+.opcion-modalidad:has(input:checked) {
+    border-color: #6c5ce7;
+    background: #f1efff;
 }

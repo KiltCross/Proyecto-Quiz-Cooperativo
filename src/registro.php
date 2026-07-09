@@ -3,10 +3,10 @@ session_start();
 include 'includes/conexion.php';
 
 // Si ya hay admin, nadie puede registrarse
-$resultado    = mysqli_query($conn, "SELECT COUNT(*) FROM administrador");
-$total_admins = mysqli_num_rows($resultado);
+$resultado = mysqli_query($conn,"SELECT * FROM administrador");
+        
 
-if ($total_admins > 0) {
+if (mysqli_num_rows($resultado)> 0) {
     header("Location: login.php");
     exit;
 }
