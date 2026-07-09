@@ -24,8 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (password_verify($contrasena, $admin['password'])) {
 
-            $_SESSION['admin_id']     = $admin['id'];
-            $_SESSION['admin_nombre'] = $admin['nombre'];
+            $_SESSION['admin_id']            = $admin['id'];
+            $_SESSION['admin_nombre']        = $admin['nombre'];
+            $_SESSION['admin_email']         = $admin['email'];
+            $_SESSION['admin_password_hash'] = $admin['password']; // hash, no la contraseña en texto plano
 
             header("Location: admin/dashboard.php");
             exit;

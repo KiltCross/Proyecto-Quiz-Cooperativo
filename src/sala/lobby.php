@@ -60,10 +60,34 @@ Esto lo conecta el websocket: traer el sala_dt (codigo, conjunto,
 modalidad), la lista de jugadores en vivo, y avisar a todos cuando
 el anfitrión inicia la partida.
 */
+var es_admin=true;
+var admin_email = "";
+var admin_contrasenia = "";
+
+const socket = new WebSocket("ws://localhost:8083?tipo_usuario=administrador&email="+ admin_email + "&contrasenia="+ admin_contrasenia);
+
+socket.onopen = function (event){
+
+}
+
+socket.onopen = function (event){
+	const el_mensaje = JSON.parse(event.data);
+
+	switch(el_mensaje.accion){
+
+	case 'dar_data_activa':
+		break;
+	case 'error':
+		break;
+	case 'error_fatal':
+		break;
+	}
+}
 
 function iniciarPartida() {
-    // falta conectar con el websocket (Empezar_Juego), por ahora redirige directo
-    window.location.href = '../juego/juego.php';
+	// falta conectar con el websocket (Empezar_Juego), por ahora redirige directo
+
+	socket.send("\"accion\": \"empezar_juego\"");
 }
 
 function confirmarCerrar() {

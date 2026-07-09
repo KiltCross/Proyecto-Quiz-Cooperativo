@@ -24,6 +24,7 @@ class Sala {
 	private $el_administrador; 
 	private Array $los_jugadores;
 	private Array $las_preguntas;
+	private int $ultima_respuesta_colectiva;
 
 	public function __construct(\mysqli $conexion_bd, String $modalidad, string $nombre_conjunto, $el_administrador){ 
 		$this->modalidad = $modalidad;
@@ -37,6 +38,7 @@ class Sala {
 		#$this->codigo_acceso = "6a4373";
 		$this->los_jugadores = [];
 		$this->las_preguntas = [];
+		$this->ultima_respuesta_colectiva = -1;
 
 		$el_email_del_administrador = $el_administrador->Dar_Email();
 
@@ -210,6 +212,7 @@ class Sala {
 		echo "'numero_pregunta_actual' en 'Terminar_Ronda()': ".$this->numero_pregunta_actual." \n";
 		echo "Número de pregutnas en 'Terminar_Ronda()': ".count($this->las_preguntas)." \n";
 
+		$this->ultima_respuesta_colectiva = $la_opcion_respondida[0];
 
 		$cambio_de_puntaje = $this->las_preguntas[$this->numero_pregunta_actual]->Responder($la_opcion_respondida[0]);
 
@@ -242,6 +245,13 @@ class Sala {
 
 
 	}
+
+	public function Dar_Ultima_Respuesta_Colectiva() : int {
+		return $this->ultima_respuesta_colectiva;
+	}
+	public function Set_Ultima_Respuesta_Colectiva(int $la_nueva_respuesta){
+		$this->ultima_respuesta_colectiva=$la_nueva_respuesta;
+	}		
 
 	public function Se_Termino_El_Juego() : bool {
 

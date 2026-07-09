@@ -354,9 +354,11 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			$la_modalidad;
 
 			switch ($el_mensaje["sala"]["modalidad"]){
+			case 'cooperativa':
 			case 'cooperativo':
 				$la_modalidad = 'cooperativa';
 				break;
+			case 'competitiva':
 			case 'competitivo':
 				$la_modalidad = 'competitiva';
 				break;
@@ -409,7 +411,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 
 			foreach($tabla_de_puntajes_y_conexiones_array as $nombre_jugador => $puntaje_y_conexion){
-				$tabla_de_puntajes_array[$nombre_jugador] = $puntaje_y_conexion[0];
+				$tabla_de_puntajes_array[] = [$nombre_jugador , $puntaje_y_conexion[0]];
 				$las_conexiones_de_los_jugadores[] = $puntaje_y_conexion[1];
 			}
 
@@ -438,18 +440,22 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 			switch ($la_sala->Dar_Modalidad()){
 			case 'cooperativa':
+				$la_respuesta_contestada = $la_sala->Dar_Ultima_Respuesta_Colectiva();
 			$resultado_de_la_respuesta_json = "{
 						\"numero_de_la_pregunta_actual\" : $numero_de_la_pregunta_actual,
-						\"la_respuesta_correcta\" : $la_respuesta_correcta,
+							\"la_respuesta_correcta\" : $la_respuesta_correcta,
+							\"la_respuesta_contestada\" : $la_respuesta_contestada,
 						\"puntaje_de_la_pregunta_contestada\" : $puntaje_de_la_pregunta_contestada,
 						\"puntaje_colectivo\" : $la_sala->Dar_Puntaje_Colectivo(),
 						\"modo_de_juego\" : \"$modo_de_juego\"
 					}";
 				break;
 			case 'competitiva':
+				$la_respueta_contestada=$el_mensaje["respuesta"]["id"];
 			$resultado_de_la_respuesta_json = "{
 						\"numero_de_la_pregunta_actual\" : $numero_de_la_pregunta_actual,
 						\"la_respuesta_correcta\" : $la_respuesta_correcta,
+							\"la_respuesta_contestada\" : $la_respuesta_contestada,
 						\"puntaje_de_la_pregunta_contestada\" : $puntaje_de_la_pregunta_contestada,
 						\"tabla_de_puntajes\" : $tabla_de_puntajes_json,
 						\"modo_de_juego\" : \"$modo_de_juego\"
@@ -473,7 +479,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 				echo "Mensaje enviado al cambiar de pregunta: "."{\"accion\" : \"terminar_juego\", \"resultade_de_la_respuesta\" : $resultado_de_la_respuesta_json}\n";
 				foreach($las_conexiones_de_los_jugadores as $una_conexion){
 					$una_conexion->send("{\"accion\" : \"terminar_juego\",
-						\"resultade_de_la_respuesta\" : $resultado_de_la_respuesta_json
+						\"resultado_de_la_respuesta\" : $resultado_de_la_respuesta_json
 					}");
 
 				}
@@ -513,14 +519,15 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			}
 
 			if (!$el_administrador_que_inicia_el_juego->Empezar_Juego($this->conexion_sql)){
-				$this->Enviar_Error_y_Conservar_Conexion($conexion , "No se pudo emezar el juego");
+				$this->Enviar_Error_y_Conservar_Conexion($conexion , "No se pudo empezar el juego");
 				return;
 			}
 
 		
 
 	
-			$la_sala_json = json_encode($el_administrador_que_inicia_el_juego->Dar_Sala_Activa());
+			$la_sala = $el_administrador_que_inicia_el_juego->Dar_Sala_Activa();
+			$la_sala_json = json_encode($la_sala);
 
 
 			//Lista conteniendo los ConnectionInterface del los jugadores en la sala; es un array no asociativo
@@ -529,9 +536,11 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 			$la_primera_pregunta_json = json_encode($el_administrador_que_inicia_el_juego->Dar_Pregunta_Actual_de_la_Sala_Activa());
 
+			$la_modalidad_de_juego = $la_sala["modalidad"];
+
 			foreach ($las_conexiones_de_los_jugadores as $una_conexion_de_un_jugador){
 				
-				$una_conexion_de_un_jugador->send("{\"accion\" : \"avisar_comienzo_del_juego\" , \"primera_pregunta\" : $la_primera_pregunta_json }");
+				$una_conexion_de_un_jugador->send("{\"accion\" : \"avisar_comienzo_del_juego\" ,\"modo_de_juego\": \"$la_modalidad_de_juego\" , \"primera_pregunta\" : $la_primera_pregunta_json }");
 
 			}
 

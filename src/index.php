@@ -29,7 +29,7 @@ $total_admins = mysqli_num_rows($resultado);
         <section class="seccion-sala">
             <h2>👥 Unite a una sala</h2>
 
-            <form action="index.php" method="POST">
+            <form action="sala/juego.php" method="POST">
                 <label for="codigo">Código de sala</label>
                 <input type="text" id="codigo" name="codigo"
                        maxlength="6" placeholder="Ej: ABC123" required>

@@ -4,6 +4,8 @@ include '../includes/conexion.php';
 
 $id_admin = $_SESSION['admin_id'];
 
+$email_admin = $_SESSION['admin_email'];
+$password_admin =  $_SESSION['admin_password_hash'];
 /*
 traigo los conjuntos del admin con cantidad de preguntas
 */
@@ -95,20 +97,60 @@ $sala_activa = mysqli_fetch_assoc($res_sala);
 
         <h2>🎮 Sala activa</h2>
 
+        <p class="mensaje-error" id="mensaje-error-sala" style="display:none"></p>
 
-            <div id="sala"></div>
+        <div id="sala"></div>
 
+        <!--
+        Plantilla del formulario de "crear sala" (conjunto + modalidad).
+        Está oculta y en JS se clona/muestra dentro de #sala cuando
+        el servidor avisa que no hay sala activa.
+        No tiene nada de WebSocket todavía: solo lee lo que el admin
+        elige y lo deja disponible en el objeto `datos_para_crear_sala`.
+        -->
+        <template id="plantilla-form-crear-sala">
+            <form id="form-crear-sala">
+
+                <label for="nombre_conjunto">Conjunto de preguntas</label>
+                <select name="nombre_conjunto" id="nombre_conjunto" required>
+                    <option value="">— Elegí un conjunto —</option>
+                    <?php foreach ($conjuntos as $conjunto) { ?>
+                        <option value="<?= $conjunto['nombre'] ?>">
+                            <?= $conjunto['nombre'] ?> (<?= $conjunto['total_preguntas'] ?> preguntas)
+                        </option>
+                    <?php } ?>
+                </select>
+
+                <label>Modalidad de juego</label>
+
+                <div class="fila-modalidad">
+                    <label class="opcion-modalidad">
+                        <input type="radio" name="modalidad" value="cooperativa" required>
+                        🤝 Cooperativa
+                    </label>
+                    <label class="opcion-modalidad">
+                        <input type="radio" name="modalidad" value="competitiva">
+                        🏆 Competitiva
+                    </label>
+                </div>
+
+                <button type="submit" class="boton boton--verde">
+                    🎮 CREAR SALA
+                </button>
+
+            </form>
+        </template>
 
     </section>
 
 </main>
 <script>
-	
-const socket = new WebSocket("ws://localhost:8083?tipo_usuario=administrador");
+
+const socket = new WebSocket("ws://localhost:8083?tipo_usuario=administrador&email=<?php echo $email_admin; ?>&contrasenia=<?php echo $password_admin; ?>");
 
 socket.onopen = function (event) {
 
-	socket.send("{\"accion\": \"obtener_sala_activa\"}");
+	//socket.send("{\"accion\": \"obtener_sala_activa\"}");
 }
 
 socket.onmessage = function (event) {
@@ -117,32 +159,74 @@ socket.onmessage = function (event) {
 
 	switch (el_mensaje.accion){
 	case "dar_sala_activa":
-			const div_sala = document.getElementById('sala');
+		const div_sala = document.getElementById('sala');
 		if (el_mensaje.sala){
 
 			div_sala.innerHTML = `<p id="sala-activa-texto">${el_mensaje.sala.codigo_acceso} - ${el_mensaje.sala.modalidad} - ${el_mensaje.sala.estado}</p>`;
+			div_sala.innerHTML += `<button class="boton" id="empezar_juego_boton" onclick="Empezar_Juego()">Empezar Juego</button>`;
 		} else {
-			div_sala.innerHTML = `<p>No hay sala activa alguna</p><button class=\"button\" onclick=\"Crear_Sala()>Crear Sala</button>\"`;
-
+			Mostrar_Formulario_Crear_Sala();
 		}
+	break;
 
-
-
-
+	// Falta agregar acá la respuesta de "crear_sala" del servidor
+	// (por ejemplo un case "sala_creada" que redirija o actualice #sala).
 	}
 
 }
-function Crear_Sala(){
+
+function Empezar_Juego(){
+	socket.send("\"accion\" : \"empezar_juego\"");
+}
+
+// Muestra el formulario de crear sala dentro de #sala, clonando la plantilla.
+function Mostrar_Formulario_Crear_Sala(){
 
 	const div_sala = document.getElementById('sala');
+	const plantilla = document.getElementById('plantilla-form-crear-sala');
 
-	let nombre_conjunto_seleccioneado = "algo";
-	let modalidad_seleccionada = 0 ; //0: cooperativo; 1: competitivo
+	div_sala.innerHTML = "";
+	div_sala.appendChild(plantilla.content.cloneNode(true));
 
-	let mensaje = "{\"accion\": \"crear_sala\" , \"sala\": {\"nombre_conjunto\": \"";
-	mensaje.concat(nombre_conjunto_seleccioneado ,"\", \"modalidad\": ", modalidad_seleccionada ,"}}");
-	
-	socket.send(mensaje);
+	const form = document.getElementById('form-crear-sala');
+	form.addEventListener('submit', function (evento) {
+		evento.preventDefault();
+		Crear_Sala();
+	});
+}
+
+// Lee lo que el admin eligió en el formulario y arma los datos listos
+// para mandar por WebSocket.
+// Falta tomar estos datos y mandar el mensaje "crear_sala" por el
+// socket (reemplaza lo que hacía el Crear_Sala() viejo, que tenía
+// los valores hardcodeados).
+function Crear_Sala(){
+
+	const nombre_conjunto_seleccionado = document.getElementById('nombre_conjunto').value;
+	const modalidad_seleccionada = document.querySelector('input[name="modalidad"]:checked')?.value;
+
+	const mensaje_error = document.getElementById('mensaje-error-sala');
+
+	if (!nombre_conjunto_seleccionado || !modalidad_seleccionada) {
+		mensaje_error.textContent = "Elegí un conjunto y una modalidad antes de crear la sala.";
+		mensaje_error.style.display = "block";
+		return;
+	}
+
+	mensaje_error.style.display = "none";
+
+	const datos_para_crear_sala = {
+		accion: "crear_sala",
+		sala: {
+			nombre_conjunto: nombre_conjunto_seleccionado,
+			modalidad: modalidad_seleccionada
+		}
+	};
+
+	// Falta descomentar esto cuando el servidor esté listo para recibirlo.
+	 socket.send(JSON.stringify(datos_para_crear_sala));
+
+	console.log("Listo para mandar por WebSocket:", datos_para_crear_sala);
 }
 
 </script>
