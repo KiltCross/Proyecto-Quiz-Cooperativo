@@ -1,8 +1,9 @@
 <?php
 session_start();
-include 'includes/conexion.php';
+include  dirname(__DIR__).'/src/includes/conexion.php';
 
 // Si ya hay admin, nadie puede registrarse
+/*
 $resultado = mysqli_query($conn,"SELECT * FROM administrador");
         
 
@@ -10,7 +11,7 @@ if (mysqli_num_rows($resultado)> 0) {
     header("Location: login.php");
     exit;
 }
-
+ */
 // Si ya está logueado, ir al dashboard
 if (isset($_SESSION['admin_id'])) {
     header("Location: admin/dashboard.php");

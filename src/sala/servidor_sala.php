@@ -446,12 +446,12 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 							\"la_respuesta_correcta\" : $la_respuesta_correcta,
 							\"la_respuesta_contestada\" : $la_respuesta_contestada,
 						\"puntaje_de_la_pregunta_contestada\" : $puntaje_de_la_pregunta_contestada,
-						\"puntaje_colectivo\" : $la_sala->Dar_Puntaje_Colectivo(),
+						\"puntaje_colectivo\" : ".$la_sala->Dar_Puntaje_Colectivo().",
 						\"modo_de_juego\" : \"$modo_de_juego\"
 					}";
 				break;
 			case 'competitiva':
-				$la_respueta_contestada=$el_mensaje["respuesta"]["id"];
+				$la_respuesta_contestada=$el_mensaje["respuesta"]["id"];
 			$resultado_de_la_respuesta_json = "{
 						\"numero_de_la_pregunta_actual\" : $numero_de_la_pregunta_actual,
 						\"la_respuesta_correcta\" : $la_respuesta_correcta,
@@ -483,6 +483,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 					}");
 
 				}
+				$conexion->send("\"accion\": \"dar_sala_activa\", \"sala\": false");
 				$la_sala->Terminar_Juego($this->conexion_sql);
 
 			}
@@ -514,7 +515,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 			}
 
 			if (!$el_administrador_que_inicia_el_juego->Tiene_Sala_Activa_y_Esta_en_Estado_Esperando()){
-				$this->Enviar_Error_y_Conservar_Conexion($conexion , "La activa de este administrador no está en estado 'Esperando'");
+				$this->Enviar_Error_y_Conservar_Conexion($conexion , "La sala activa de este administrador no está en estado 'Esperando'");
 				return;
 			}
 
@@ -573,7 +574,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 	}
 	
 	protected function Enviar_Error_y_Cerrar_Conexion(ConnectionInterface $conexion, string $mensaje) {
-		#echo $mensaje;
+		echo $mensaje;
 		if (count($this->salas) !== 0){
 		
 		
@@ -605,7 +606,7 @@ class Servidor_Sala implements WebSocketMessageComponentInterface {
 
 	}
 	protected function Enviar_Error_y_Conservar_Conexion(ConnectionInterface $conexion, string $mensaje) {
-		#echo $mensaje;
+		echo $mensaje;
 		$conexion->send("{\"accion\" : \"error\", \"mensaje\" : \"$mensaje\"}");
 	}
 

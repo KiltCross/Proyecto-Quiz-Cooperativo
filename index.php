@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'includes/conexion.php';
+include dirname(__DIR__).'/Proyecto-Quiz-Cooperativo/src/includes/conexion.php';
 $resultado = mysqli_query($conn, "SELECT * FROM administrador");
 $total_admins = mysqli_num_rows($resultado);
 ?>
@@ -10,7 +10,7 @@ $total_admins = mysqli_num_rows($resultado);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Cooperativo</title>
-    <link rel="stylesheet" href="assets/css/estilos.css">
+    <link rel="stylesheet" href="./src/assets/css/estilos.css">
 </head>
 <body>
 
@@ -29,7 +29,7 @@ $total_admins = mysqli_num_rows($resultado);
         <section class="seccion-sala">
             <h2>👥 Unite a una sala</h2>
 
-            <form action="src/sala/antesala.php" method="POST">
+            <form action="src/sala/juego.php" method="POST">
                 <label for="codigo">Código de sala</label>
                 <input type="text" id="codigo" name="codigo"
                        maxlength="6" placeholder="Ej: ABC123" required>
@@ -52,7 +52,7 @@ $total_admins = mysqli_num_rows($resultado);
         <section class="seccion-admin">
             <h2>🛡 Administración</h2>
             <p>¿Sos administrador?</p>
-            <a href="login.php" class="boton boton--contorno">👥 INICIAR SESIÓN ADMINISTRADOR</a>
+            <a href="src/login.php" class="boton boton--contorno">👥 INICIAR SESIÓN ADMINISTRADOR</a>
         </section>
         <?php endif; ?>
 

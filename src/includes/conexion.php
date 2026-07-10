@@ -2,13 +2,13 @@
 
 #$host = "localhost";
 #$host = "host.docker.internal";
-$host = "mysql";
+$host = "localhost";
 $user = "tecnologo";
 $pass = "tecnologo";
 $db   = "quiz_cooperativo";
 $port = 3306;
 
-$conn = mysqli_connect($host, $user, $pass, $db, $port);
+$conn = mysqli_connect($host, $user, $pass, $db);
 
 if (!$conn) {
     die("Error de conexión: " . mysqli_connect_error());

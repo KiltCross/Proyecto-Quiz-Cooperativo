@@ -153,21 +153,31 @@ socket.onopen = function (event) {
 	//socket.send("{\"accion\": \"obtener_sala_activa\"}");
 }
 
+		const div_sala = document.getElementById('sala');
 socket.onmessage = function (event) {
 
 	el_mensaje = JSON.parse(event.data);
 
 	switch (el_mensaje.accion){
 	case "dar_sala_activa":
-		const div_sala = document.getElementById('sala');
 		if (el_mensaje.sala){
 
 			div_sala.innerHTML = `<p id="sala-activa-texto">${el_mensaje.sala.codigo_acceso} - ${el_mensaje.sala.modalidad} - ${el_mensaje.sala.estado}</p>`;
-			div_sala.innerHTML += `<button class="boton" id="empezar_juego_boton" onclick="Empezar_Juego()">Empezar Juego</button>`;
+			//button_empezar_juego =`<button class="boton" id="empezar_juego_boton">Empezar Juego</button>`;
+			const button_empezar_juego = document.createElement('button');
+			button_empezar_juego.classList.add("boton");
+			button_empezar_juego.id="boton_empezar_juego";
+			button_empezar_juego.innerHTML = `Empezar Juego`;
+			button_empezar_juego.addEventListener('click', () =>{socket.send("{\"accion\" : \"empezar_juego\"}"); console.log("Funciona el condenado boton");});
+			div_sala.appendChild(button_empezar_juego);
 		} else {
 			Mostrar_Formulario_Crear_Sala();
 		}
-	break;
+		break;
+		case 'error':
+		case 'error_fatal':
+			div_sala.innerHTML += `<p id="mensaje de error">${el_mensaje.mensaje}</p>`;
+			break;
 
 	// Falta agregar acá la respuesta de "crear_sala" del servidor
 	// (por ejemplo un case "sala_creada" que redirija o actualice #sala).

@@ -66,7 +66,11 @@ $nombre_jugador = $_POST['nombre'];
             <div class="resultado-puntos" id="res-puntos"></div>
             <div class="resultado-correcto" id="res-correcto">
                 Respuesta correcta: <span id="res-correcto-texto">—</span>
-            </div>
+	    </div>
+		<div class="respuesta-dada" id="respuesta-data">
+		Respuesta dada: <span id="respuesta-dada-texto">_</span>
+		</div>
+
             <p class="espera-anfitrion">
                 <span class="spinner"></span> Siguiente pregunta en unos segundos...
             </p>
@@ -111,23 +115,17 @@ $nombre_jugador = $_POST['nombre'];
 
 </div>
 
-<div class="zona-mensaje-error">
+<div id="zona-mensaje-error">
 </div>
 
 <script>
-/*
-HTML puro, sin nada de PHP ni datos hardcodeados.
-Esto lo conecta el websocket: traer el pregunta_dt de cada ronda,
-mandar Responder_Pregunta al elegir una opcion, mostrar la
-retroalimentacion (respuesta_correcta y puntuacion_de_la_pregunta),
-y al final mostrar resultados (puntaje de equipo o ranking, según
-la modalidad).
- */
-var codigo_acceso = <?php echo $codigo_acceso; ?>;
-var nombre_jugador= <?php echo $nombre_jugador; ?>;
+console.log("Punto 1");
+//var codigo_acceso = <?php echo $codigo_acceso; ?>;
+//var nombre_jugador= <?php echo $nombre_jugador; ?>;
 var ultima_respuesta = -1;
 var ultima_pregunta;
 var modo_de_juego;
+var no_es_primera_pregunta=true;
 
 			p_numero_pregunta = document.getElementById('pregunta-num');
 			p_texto_pregunta = document.getElementById('pregunta-texto');
@@ -138,64 +136,89 @@ var modo_de_juego;
 			div_zona_mensaje_error = document.getElementById('zona-mensaje-error');
 			div_bloque_retroalimentacion = document.getElementById('bloque-retroalimentacion');
 			div_bloque_pregunta = document.getElementById('bloque-pregunta');
+			span_respuesta_dada_texto = document.getElementById('respuesta-dada-texto');
 
-const socket = new WebSocket("ws://localhost:8083?tipo_usuario=jugador?codigo_acceso="+codigo_acceso+"&nombre="+nombre_jugador);
+//const socket = new WebSocket("ws://localhost:8083?tipo_usuario=jugador?codigo_acceso="+codigo_acceso+"&nombre="+nombre_jugador);
+const socket = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=<?php echo $codigo_acceso; ?>&nombre=<?php echo $nombre_jugador; ?>");
+
+console.log("Se conecto a:");
+//console.log("ws://localhost:8083?tipo_usuario=jugador?codigo_acceso="+codigo_acceso+"&nombre="+nombre_jugador);
+console.log("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=<?php echo $codigo_acceso; ?>&nombre=<?php echo $nombre_jugador; ?>");
 
 socket.onopen = function (event){}
 
 socket.onmessage = function (event){
 	const el_mensaje = JSON.parse(event.data);
 	switch(el_mensaje.accion){
-	case 'avisar_comienzo_del_juego':
-		ultima_pregunta = el_mensaje.primera_pregunta;
-
-		modo_de_juego = el_mensaje.modo_de_juego;
-
-
-		document.getElementById('estado-res').style.display="none";
-			p_numero_pregunta.innerHTML = `el_mensaje.primera_pregunta.numero`;
-			p_texto_pregunta.innerHTML = `el_mensaje.primera_pregunta.texto`;
-
-			div_opciones.innerHTML= ``;
-
-			var numero_opcion =1;
-			for (const una_opcion of el_mensaje.primera_pregunta.opciones){
-				div_opciones.innerHTML += `<button class="boton" id="boton-opcion-${numero_opcion}" onclick="Responder(${numero_opcion})">${una_opcion}</button>`;
-				numero_opcion++;
-			}
-
-		break;
 	case 'cambio_de_pregunta':
 		div_bloque_pregunta.style.display="none";
 		div_bloque_retroalimentacion.style.display="block";
 
-		div_resultado_titulo.innerHTML =
-			`<p>${ultima_pregunta.opciones[el_mensaje.resultado_de_la_respuesta.la_respuesta_correcta]}</p>`;
+		div_resultado_titulo.innerHTML = `<p>Retroalimentacion: </p>`
+			;
 		div_resultado_puntos.innerHTML = 
-			`<p>${el_mensaje.resultado_de_la_respuesta.puntaje_de_la_pregunta_contestada}</p>`;
+			`<p>Los puntos de esta prgunta son: ${el_mensaje.resultado_de_la_respuesta.puntaje_de_la_pregunta_contestada}</p>`;
 		div_resultado_correcto_texto.innerHTML =
-			`${el_mensaje.resultado_de_la_respuesta.la_respuesta_correcta}`;
-
-		ultima_pregunta=el_mensaje.siguiente_pregunta;
-		p_numero_pregunta.innerHTML= el_mensaje.siguiente_pregunta.numero;
-		p_texto_pregunta.innerHTML = el_mensaje.siguiente_pregunta.texto;
-		div_opciones.innerHTML = ``;
-				for (const una_opcion of el_mensaje.siguiente_pregunta.opciones){
-				div_opciones.innerHTML += `<p>${una_opcion}</p>`;
-				}
+			`${ultima_pregunta.opciones[el_mensaje.resultado_de_la_respuesta.la_respuesta_correcta-1]}`;
+		span_respuesta_dada_texto.innerHTML= `${ultima_pregunta.opciones[ultima_respuesta-1]}`
 		setTimeout(()=>{
 		div_bloque_pregunta.style.display="block";
 		div_bloque_retroalimentacion.style.display="none";
-				}, 3000);
+				}, 10000);
+
+	case 'avisar_comienzo_del_juego':
+		if (no_es_primera_pregunta){
+		console.log("comienzo del juego");
+
+		document.getElementById('estado-resp').style.display="none";
+		modo_de_juego = el_mensaje.modo_de_juego;
+		no_es_primera_pregunta = false;
+		ultima_pregunta = el_mensaje.primera_pregunta;
+		} else {
+			console.log("Cambio de pregunto.");
+			ultima_pregunta = el_mensaje.siguiente_pregunta;
+		}
+
+
+
+
+
+			p_numero_pregunta.innerHTML = `${ultima_pregunta.numero}`;
+			p_texto_pregunta.innerHTML = `${ultima_pregunta.texto}`;
+
+			div_opciones.innerHTML= ``;
+
+			var numero_opcion =1;
+			for (const una_opcion of ultima_pregunta.opciones){
+				
+				//button_opcion = document.createElement('button');
+			//	button_opcion.classList.add('boton');
+			//	button_opcion.id="boton-opcion-"+numero_opcion;
+		//		button_opcion.innerHTML=`${una_opcion}`;
+			//	button_opcion.addEventListener('click', () => {
+		//		socket.send("{\"accion\" : \"responder_pregunta_actual\", \"respuesta\" : {\"id\": "+numero_opcion+"}}");
+	//			ultima_respuesta = numero_opcion;
+	//			});
+
+	//		div_opciones.appendChild(button_opcion);
+	//			 */
+				div_opciones.innerHTML += `<button id="boton-opcion-${numero_opcion}" class="boton boton--opcion" onclick="Responder(${numero_opcion})">${una_opcion}</button>`;
+
+				numero_opcion++;
+			}
+
+
 
 		break;
 
 	case 'terminar_juego':
 		div_bloque_pregunta.style.display="none";
-		document.getElementById('bloque-respuesta').style.display="block";
+		document.getElementById('bloque-resultados').style.display="block";
 		if (modo_de_juego=='cooperativa'){
+			document.getElementById('resumen-cooperativa').style.display="block";
 			document.getElementById('puntaje-final-equipo').innerHTML=`${el_mensaje.resultado_de_la_respuesta.puntaje_colectivo}`;
 		} else if (modo_de_juego=='competitiva'){
+			document.getElementById('resumen-competitiva').style.display="block";
 			tbody_tabla_ranking_cuerpo = document.getElementById('tabla-ranking-cuerpo');
 			for(const un_puntaje of el_mensaje.resultado_de_la_respuesta.tabla_de_puntajes){
 				tbody_tabla_ranking_cuerpo.innerHTML += `<tr><th>*</th><th>${un_puntaje[0]}</th><th>${un_puntaje[1]}</th></tr>`;
@@ -216,7 +239,8 @@ socket.onmessage = function (event){
 }
 
 function Responder(respuesta){
-	socket.send("\"accion\" : \"responder_pregunta_actual\", \"respuesta\" : {\"id\": "+respuesta+"}");
+	socket.send("{\"accion\" : \"responder_pregunta_actual\", \"respuesta\" : {\"id\": "+respuesta+"}}");
+	ultima_respuesta = respuesta;
 }
 </script>
 

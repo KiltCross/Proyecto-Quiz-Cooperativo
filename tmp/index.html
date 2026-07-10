@@ -44,6 +44,8 @@
 		let jugador_1;
 		let jugador_2;
 		let jugador_3;
+
+		let codigo_acceso = "6a4fee";
 		function Conectar_Admin(){
 			 admin = new WebSocket("ws://localhost:8083?tipo_usuario=administrador&email=A@A.com&contrasenia=AAA");
 
@@ -72,7 +74,7 @@
 			admin.close();
 		}
 		function Conectar_Jugador_1(){
-			jugador_1 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=6a4373&nombre=Ichi");
+			jugador_1 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso="+codigo_acceso+"&nombre=Ichi");
 
 			jugador_1.onopen = function (event){}
 
@@ -95,7 +97,7 @@
 		}
 
 		function Conectar_Jugador_2(){
-			jugador_2 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=6a4373&nombre=Ni");
+			jugador_2 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso="+codigo_acceso+"&nombre=Ni");
 			
 			jugador_2.onopen = function (event) {}
 
@@ -113,7 +115,7 @@
 			jugador_2.close();
 		}
 		function Conectar_Jugador_3(){
-			jugador_3 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso=6a4373&nombre=San");
+			jugador_3 = new WebSocket("ws://localhost:8083?tipo_usuario=jugador&codigo_acceso="+codigo_acceso+"&nombre=San");
 			
 			jugador_3.onopen = function (event) {}
 

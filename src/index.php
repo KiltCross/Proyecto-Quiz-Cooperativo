@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'includes/conexion.php';
+include dirname(__DIR__).'/src/includes/conexion.php';
 $resultado = mysqli_query($conn, "SELECT * FROM administrador");
 $total_admins = mysqli_num_rows($resultado);
 ?>
